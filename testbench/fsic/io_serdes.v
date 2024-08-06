@@ -1,5 +1,3 @@
-
-
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Author : Tony Ho
@@ -80,7 +78,7 @@ module IO_SERDES #(
     input wire   [pDATA_WIDTH-1:0] as_is_tdata,
     `ifdef USER_PROJECT_SIDEBAND_SUPPORT
       input wire   [pUSER_PROJECT_SIDEBAND_WIDTH-1:0] as_is_tupsb,
-    `endif
+    `endif //USER_PROJECT_SIDEBAND_SUPPORT
     input wire   [(pDATA_WIDTH/8)-1:0] as_is_tstrb,
     input wire   [(pDATA_WIDTH/8)-1:0] as_is_tkeep,
     input wire   as_is_tlast,
@@ -88,6 +86,7 @@ module IO_SERDES #(
     input wire   as_is_tvalid,
     input wire   [1:0] as_is_tuser,
     input wire   as_is_tready,    //when local side axis switch Rxfifo size <= threshold then as_is_tready=0, this flow control mechanism is for notify remote side do not provide data with is_as_tvalid=1
+    output wire rxen_out,   //output rxen for post synthsis simultation
 
     output wire      serial_tclk,
     output wire  [pSERIALIO_WIDTH-1: 0] serial_txd,
@@ -99,7 +98,7 @@ module IO_SERDES #(
     output wire   [pDATA_WIDTH-1:0] is_as_tdata,
     `ifdef USER_PROJECT_SIDEBAND_SUPPORT
       output wire   [pUSER_PROJECT_SIDEBAND_WIDTH-1:0] is_as_tupsb,
-    `endif
+    `endif //USER_PROJECT_SIDEBAND_SUPPORT
     output wire   [(pDATA_WIDTH/8)-1:0] is_as_tstrb,
     output wire   [(pDATA_WIDTH/8)-1:0] is_as_tkeep,
     output wire   is_as_tlast,
@@ -127,9 +126,9 @@ module IO_SERDES #(
   `ifdef USER_PROJECT_SIDEBAND_SUPPORT
     wire Serial_Data_Out_tupsb_4_1;
     wire Serial_Data_Out_tupsb_tlast_tvalid_tready;
-  `else
+  `else //USER_PROJECT_SIDEBAND_SUPPORT
     wire Serial_Data_Out_tlast_tvalid_tready;
-  `endif
+  `endif //USER_PROJECT_SIDEBAND_SUPPORT
   wire Serial_Data_Out_tid_tuser;
   wire Serial_Data_Out_tkeep;
   wire Serial_Data_Out_tstrb;
@@ -137,16 +136,16 @@ module IO_SERDES #(
 
   `ifdef USER_PROJECT_SIDEBAND_SUPPORT
     assign   serial_txd[pSERIALIO_WIDTH-1:0] = {Serial_Data_Out_tupsb_4_1, Serial_Data_Out_tupsb_tlast_tvalid_tready, Serial_Data_Out_tid_tuser, Serial_Data_Out_tkeep, Serial_Data_Out_tstrb, Serial_Data_Out_tdata[pSERIALIO_TDATA_WIDTH-1:0]};
-  `else
+  `else //USER_PROJECT_SIDEBAND_SUPPORT
     assign   serial_txd[pSERIALIO_WIDTH-1:0] = {Serial_Data_Out_tlast_tvalid_tready, Serial_Data_Out_tid_tuser, Serial_Data_Out_tkeep, Serial_Data_Out_tstrb, Serial_Data_Out_tdata[pSERIALIO_TDATA_WIDTH-1:0]};
-  `endif
+  `endif //USER_PROJECT_SIDEBAND_SUPPORT
 
   `ifdef USER_PROJECT_SIDEBAND_SUPPORT
     wire Serial_Data_In_tupsb_4_1;
     wire Serial_Data_In_tupsb_tlast_tvalid_tready;
-  `else
+  `else //USER_PROJECT_SIDEBAND_SUPPORT
     wire Serial_Data_In_tlast_tvalid_tready;
-  `endif
+  `endif //USER_PROJECT_SIDEBAND_SUPPORT
   wire Serial_Data_In_tid_tuser;
   wire Serial_Data_In_tkeep;
   wire Serial_Data_In_tstrb;
@@ -154,9 +153,9 @@ module IO_SERDES #(
 
   `ifdef USER_PROJECT_SIDEBAND_SUPPORT
     assign {Serial_Data_In_tupsb_4_1, Serial_Data_In_tupsb_tlast_tvalid_tready, Serial_Data_In_tid_tuser, Serial_Data_In_tkeep, Serial_Data_In_tstrb, Serial_Data_In_tdata[pSERIALIO_TDATA_WIDTH-1:0] } = serial_rxd[pSERIALIO_WIDTH-1:0];
-  `else
+  `else //USER_PROJECT_SIDEBAND_SUPPORT
     assign {Serial_Data_In_tlast_tvalid_tready, Serial_Data_In_tid_tuser, Serial_Data_In_tkeep, Serial_Data_In_tstrb, Serial_Data_In_tdata[pSERIALIO_TDATA_WIDTH-1:0] } = serial_rxd[pSERIALIO_WIDTH-1:0];
-  `endif
+  `endif //USER_PROJECT_SIDEBAND_SUPPORT
 
 
   reg  txen;
@@ -268,9 +267,9 @@ module IO_SERDES #(
   `ifdef USER_PROJECT_SIDEBAND_SUPPORT
     reg [3:0] pre_as_is_tupsb_4_1_buf;
     reg [(pDATA_WIDTH/8)-1:0] pre_as_is_tupsb_tlast_tvalid_tready_buf;
-  `else
+  `else //USER_PROJECT_SIDEBAND_SUPPORT
     reg [(pDATA_WIDTH/8)-1:0] pre_as_is_tlast_tvalid_tready_buf;
-  `endif
+  `endif //USER_PROJECT_SIDEBAND_SUPPORT
 
   wire txen_rst_n = axis_rst_n & txen;
 
@@ -284,9 +283,9 @@ module IO_SERDES #(
       `ifdef USER_PROJECT_SIDEBAND_SUPPORT
         pre_as_is_tupsb_4_1_buf <= 0;
         pre_as_is_tupsb_tlast_tvalid_tready_buf <= 0;
-      `else
+      `else //USER_PROJECT_SIDEBAND_SUPPORT
         pre_as_is_tlast_tvalid_tready_buf <= 0;
-      `endif
+      `endif //USER_PROJECT_SIDEBAND_SUPPORT
     end 
     else begin
       pre_as_is_tdata_buf <= as_is_tdata;
@@ -300,25 +299,26 @@ module IO_SERDES #(
         pre_as_is_tupsb_tlast_tvalid_tready_buf[2] <= as_is_tlast;
         pre_as_is_tupsb_tlast_tvalid_tready_buf[1] <= as_is_tvalid;
         pre_as_is_tupsb_tlast_tvalid_tready_buf[0] <= as_is_tready;
-      `else
+      `else //USER_PROJECT_SIDEBAND_SUPPORT
         pre_as_is_tlast_tvalid_tready_buf[2] <= as_is_tlast;
         pre_as_is_tlast_tvalid_tready_buf[1] <= as_is_tvalid;
         pre_as_is_tlast_tvalid_tready_buf[0] <= as_is_tready;
-      `endif
+      `endif //USER_PROJECT_SIDEBAND_SUPPORT
+      
       if (is_as_tready && as_is_tvalid) begin      //data transfer from Axis siwtch to io serdes when is_as_tready=1 and as_is_tvalid=1
         
         `ifdef USER_PROJECT_SIDEBAND_SUPPORT
           pre_as_is_tupsb_tlast_tvalid_tready_buf[1] <= as_is_tvalid;
-        `else
+        `else //USER_PROJECT_SIDEBAND_SUPPORT
           pre_as_is_tlast_tvalid_tready_buf[1] <= as_is_tvalid;
-        `endif
+        `endif //USER_PROJECT_SIDEBAND_SUPPORT
       end
       else begin
         `ifdef USER_PROJECT_SIDEBAND_SUPPORT
           pre_as_is_tupsb_tlast_tvalid_tready_buf[1] <= 0;      // set as_is_tvalid =0 to remote side
-        `else
+        `else //USER_PROJECT_SIDEBAND_SUPPORT
           pre_as_is_tlast_tvalid_tready_buf[1] <= 0;      // set as_is_tvalid =0 to remote side
-        `endif
+        `endif //USER_PROJECT_SIDEBAND_SUPPORT
 
       end
     end
@@ -331,9 +331,9 @@ module IO_SERDES #(
   `ifdef USER_PROJECT_SIDEBAND_SUPPORT
     reg [pCLK_RATIO-1:0] as_is_tupsb_4_1_buf;
     reg [pCLK_RATIO-1:0] as_is_tupsb_tlast_tvalid_tready_buf;    
-  `else
+  `else //USER_PROJECT_SIDEBAND_SUPPORT
     reg [pCLK_RATIO-1:0] as_is_tlast_tvalid_tready_buf;    
-  `endif
+  `endif //USER_PROJECT_SIDEBAND_SUPPORT
 
   always @(posedge ioclk or negedge axis_rst_n)  begin
     if ( !axis_rst_n ) begin
@@ -344,9 +344,9 @@ module IO_SERDES #(
       `ifdef USER_PROJECT_SIDEBAND_SUPPORT
         as_is_tupsb_4_1_buf <= 0;
         as_is_tupsb_tlast_tvalid_tready_buf <= 0;
-      `else
+      `else //USER_PROJECT_SIDEBAND_SUPPORT
         as_is_tlast_tvalid_tready_buf <= 0;
-      `endif
+      `endif //USER_PROJECT_SIDEBAND_SUPPORT
     end
     else begin
       if (phase_cnt == 3) begin      //update as_is_*_buf when phase_cnt == 3
@@ -357,9 +357,9 @@ module IO_SERDES #(
         `ifdef USER_PROJECT_SIDEBAND_SUPPORT
           as_is_tupsb_4_1_buf <= pre_as_is_tupsb_4_1_buf;
           as_is_tupsb_tlast_tvalid_tready_buf <= pre_as_is_tupsb_tlast_tvalid_tready_buf;
-        `else
+        `else //USER_PROJECT_SIDEBAND_SUPPORT
           as_is_tlast_tvalid_tready_buf <= pre_as_is_tlast_tvalid_tready_buf;
-        `endif
+        `endif //USER_PROJECT_SIDEBAND_SUPPORT
       end
     end
   end
@@ -410,20 +410,21 @@ module IO_SERDES #(
   `ifdef USER_PROJECT_SIDEBAND_SUPPORT
     assign Serial_Data_Out_tupsb_4_1 = as_is_tupsb_4_1_buf[tx_shift_phase_cnt] & txen ;
     assign Serial_Data_Out_tupsb_tlast_tvalid_tready = as_is_tupsb_tlast_tvalid_tready_buf[tx_shift_phase_cnt] & txen ;
-  `else
+  `else //USER_PROJECT_SIDEBAND_SUPPORT
     assign Serial_Data_Out_tlast_tvalid_tready = as_is_tlast_tvalid_tready_buf[tx_shift_phase_cnt] & txen ;
-  `endif
+  `endif //USER_PROJECT_SIDEBAND_SUPPORT
 
 
 
 // For Rx Path
   `ifdef USER_PROJECT_SIDEBAND_SUPPORT
     wire rxdata_out_valid[pSERIALIO_TDATA_WIDTH+3:0];    //add dummy connection to avoid WARNING message by xelab
-  `else
+  `else //USER_PROJECT_SIDEBAND_SUPPORT
     wire rxdata_out_valid[pSERIALIO_TDATA_WIDTH+2:0];    //add dummy connection to avoid WARNING message by xelab
-  `endif
+  `endif //USER_PROJECT_SIDEBAND_SUPPORT
 
   reg  rxen;
+  assign rxen_out = rxen;
 
   always @(negedge ioclk or negedge axis_rst_n)  begin
     if ( !axis_rst_n ) begin
@@ -539,7 +540,7 @@ module IO_SERDES #(
       .rxdata_out_valid(rx_received_data)
     );
 
-  `else
+  `else //USER_PROJECT_SIDEBAND_SUPPORT
     wire is_as_dummy;
 
     fsic_io_serdes_rx  #(
@@ -556,7 +557,7 @@ module IO_SERDES #(
       .rxdata_out( {is_as_dummy, is_as_tlast, is_as_tvalid, is_as_tready_remote}),    // only connect [2:0]
       .rxdata_out_valid(rx_received_data)
     );
-  `endif
+  `endif //USER_PROJECT_SIDEBAND_SUPPORT
 
   reg is_as_tready_out;
   assign is_as_tready = is_as_tready_out;
@@ -573,6 +574,7 @@ module IO_SERDES #(
 
 
 endmodule
+
 
 
 
