@@ -4,7 +4,7 @@
 
 
 
-module USER_PRJ0 #( parameter pUSER_PROJECT_SIDEBAND_WIDTH   = 5,
+module USER_PRJ1 #( parameter pUSER_PROJECT_SIDEBAND_WIDTH   = 5,
           parameter pADDR_WIDTH   = 12,
                    parameter pDATA_WIDTH   = 32
                  )
@@ -60,14 +60,14 @@ assign wready        = 1'b1;
 assign arready       = 1'b1;
 assign rvalid        = 1'b1;
 
-assign ss_tready     = 1'b1;
+//assign ss_tready     = 1'b1;
 
 
 reg [31:0] ss_tdata_reg;
 reg ss_tvalid_reg;
 
-assign sm_tvalid     = ss_tvalid_reg || ss_tvalid;
-assign sm_tdata      = ss_tdata_reg;
+assign sm_tvalid     = 0;
+assign sm_tdata      = 0;
 assign sm_tid        = 3'b0;
 `ifdef USER_PROJECT_SIDEBAND_SUPPORT
   assign sm_tupsb      = 5'b0;
@@ -83,7 +83,19 @@ assign la_data_o     = 24'b0;
 reg [7:0] cfg_reg;
 reg [7:0] next_cfg_reg;
 
+reg [4:0] cnt;
+wire [4:0] cnt_next;
 
+assign cnt_next = (cnt == 5'd25) ? cnt : cnt + 1'b1;
+
+always @(posedge axis_clk or negedge axis_rst_n) begin
+    if (~axis_rst_n || cfg_reg[0])
+        cnt <= 1'b0;
+    else
+        cnt <= cnt_next;
+end
+
+assign ss_tready = (cnt == 5'd25);
 
 always @(posedge axis_clk or negedge axis_rst_n) begin
     if (~axis_rst_n)
@@ -99,12 +111,24 @@ always @(posedge axis_clk or negedge axis_rst_n) begin
         ss_tvalid_reg <= ss_tvalid;
 end
 
+wire done;
+
+assign done = (ss_tdata == 32'd39);
+
 always @* begin
-    if(awaddr==12'h00 && awvalid && wvalid) begin
-        next_cfg_reg = wdata[7:0];
-    end else begin
-        next_cfg_reg = cfg_reg;
-    end
+    case(cfg_reg)
+        8'd0:
+            if(awaddr==12'h00 && awvalid && wvalid) next_cfg_reg = wdata[7:0];
+            else next_cfg_reg = cfg_reg;
+        8'd1:
+            next_cfg_reg = 8'd2;
+        8'd2:
+            if(done) next_cfg_reg = 8'd4;
+            else next_cfg_reg = cfg_reg;
+        8'd4:
+            next_cfg_reg = cfg_reg;
+        default: next_cfg_reg = 8'd0;
+    endcase
 end
 
 always@(posedge axi_clk or negedge axi_reset_n) begin
@@ -117,4 +141,4 @@ end
 assign rdata = (arvalid && rready && (araddr==12'h00)) ? (cfg_reg) : ({pDATA_WIDTH{1'b0}});
 
 
-endmodule // USER_PRJ0
+endmodule // USER_PRJ1

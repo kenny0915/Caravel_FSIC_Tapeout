@@ -486,20 +486,7 @@ assign ioclk = io_clk;
 		error_cnt = 0;
 		check_cnt = 0;
 
-        fsic_system_initial();// initial whole system
-
-   
-                
-                
-        // there are two test can be choosed
-        //test1();// from soc side to write configuration
-        //test2();// from fpga side to write configuration
-                 
-                
-                
-                
-                
-                
+        fsic_system_initial();// initial whole system            
                 
         `ifdef SYSTEM_test103
 		test001();
@@ -522,7 +509,7 @@ assign ioclk = io_clk;
         `endif
 
         `ifdef SYSTEM_test114
-		test006();
+		test008();
 		`endif
 
         //`ifdef
@@ -632,11 +619,6 @@ assign ioclk = io_clk;
 	task test001;
 		begin
 			$display("test001: soc cfg write/read test");
-
-			#100;
-			soc_apply_reset(40,40);
-			fpga_apply_reset(40,40);
-
 
 			test001_is_soc_cfg();
 			test001_aa_internal_soc_cfg();
@@ -751,39 +733,8 @@ assign ioclk = io_clk;
 
 		begin
 			$display("test002: fpga_cfg_read test");
-			fork 
-				soc_apply_reset(40*10, 40);			//change coreclk phase in soc
-				fpga_apply_reset(40,40);		//fix coreclk phase in fpga
-			join
-			
-			#40;
-			
-			fpga_as_to_is_init();	
-			
-			fpga_cc_is_enable=1;
-			fork 
-				soc_is_cfg_write(0, 4'b0001, 1);				//ioserdes rxen
-				fpga_cfg_write(0,1,1,0);
-			join
-			$display($time, "=> soc rxen_ctl=1");
-			$display($time, "=> fpga rxen_ctl=1");
-
-			#400;
-			fork 
-				soc_is_cfg_write(0, 4'b0001, 3);				//ioserdes txen
-				fpga_cfg_write(0,3,1,0);
-			join
-			$display($time, "=> soc txen_ctl=1");
-			$display($time, "=> fpga txen_ctl=1");
-
-			#200;
-			fpga_as_is_tdata = 32'h5a5a5a5a;
-			#40;
-			#200;
 
 			test002_fpga_to_soc_cfg_read();
-
-			#200;
 		end
 	endtask
 
@@ -891,36 +842,6 @@ assign ioclk = io_clk;
 	task test003;
 		begin
 			$display("test003: concurrent test");
-			fork 
-				soc_apply_reset(40, 40);			//change coreclk phase in soc
-				fpga_apply_reset(40,40);		//fix coreclk phase in fpga
-			join
-			
-			#40;
-			
-			fpga_as_to_is_init();	
-			
-			
-			fpga_cc_is_enable=1;
-			fork 
-				soc_is_cfg_write(0, 4'b0001, 1);				//ioserdes rxen
-				fpga_cfg_write(0,1,1,0);
-			join
-			$display($time, "=> soc rxen_ctl=1");
-			$display($time, "=> fpga rxen_ctl=1");
-
-			#400;
-			fork 
-				soc_is_cfg_write(0, 4'b0001, 3);				//ioserdes txen
-				fpga_cfg_write(0,3,1,0);
-			join
-			$display($time, "=> soc txen_ctl=1");
-			$display($time, "=> fpga txen_ctl=1");
-
-			#200;
-			fpga_as_is_tdata = 32'h5a5a5a5a;
-			#40;
-			#200;
 
 			fork
 				test003_fpga_con_rw();
@@ -998,35 +919,6 @@ assign ioclk = io_clk;
 	task test004;
 		begin
 			$display("test004: mailbox test 1");
-			fork 
-				soc_apply_reset(40, 40);			//change coreclk phase in soc
-				fpga_apply_reset(40,40);		//fix coreclk phase in fpga
-			join
-			
-			#40;
-			
-			fpga_as_to_is_init();	
-			
-			fpga_cc_is_enable=1;
-			fork 
-				soc_is_cfg_write(0, 4'b0001, 1);				//ioserdes rxen
-				fpga_cfg_write(0,1,1,0);
-			join
-			$display($time, "=> soc rxen_ctl=1");
-			$display($time, "=> fpga rxen_ctl=1");
-
-			#400;
-			fork 
-				soc_is_cfg_write(0, 4'b0001, 3);				//ioserdes txen
-				fpga_cfg_write(0,3,1,0);
-			join
-			$display($time, "=> soc txen_ctl=1");
-			$display($time, "=> fpga txen_ctl=1");
-
-			#200;
-			fpga_as_is_tdata = 32'h5a5a5a5a;
-			#40;
-			#200;
 
 			test004_mailbox_test_1();
 		end
@@ -1069,37 +961,6 @@ assign ioclk = io_clk;
 	// soc write and read mailbox and check correctness
 	task test005;
 		begin
-			$display("test005: mailbox test 2");
-			fork 
-				soc_apply_reset(40, 40);			//change coreclk phase in soc
-				fpga_apply_reset(40,40);		//fix coreclk phase in fpga
-			join
-			
-			#40;
-			
-			fpga_as_to_is_init();	
-			
-
-			fpga_cc_is_enable=1;
-			fork 
-				soc_is_cfg_write(0, 4'b0001, 1);				//ioserdes rxen
-				fpga_cfg_write(0,1,1,0);
-			join
-			$display($time, "=> soc rxen_ctl=1");
-			$display($time, "=> fpga rxen_ctl=1");
-
-			#400;
-			fork 
-				soc_is_cfg_write(0, 4'b0001, 3);				//ioserdes txen
-				fpga_cfg_write(0,3,1,0);
-			join
-			$display($time, "=> soc txen_ctl=1");
-			$display($time, "=> fpga txen_ctl=1");
-
-			#200;
-			fpga_as_is_tdata = 32'h5a5a5a5a;
-			#40;
-			#200;
 
 			test005_mailbox_test_2();
 		end
@@ -1139,36 +1000,7 @@ assign ioclk = io_clk;
 	// user project loop back test
 	task test006;
 		begin
-			$display("test006: user project loop back - test");
-			fork 
-				soc_apply_reset(40, 40);			//change coreclk phase in soc
-				fpga_apply_reset(40,40);		//fix coreclk phase in fpga
-			join
-			
-			#40;
-			
-			fpga_as_to_is_init();	
-			
-			fpga_cc_is_enable=1;
-			fork 
-				soc_is_cfg_write(0, 4'b0001, 1);				//ioserdes rxen
-				fpga_cfg_write(0,1,1,0);
-			join
-			$display($time, "=> soc rxen_ctl=1");
-			$display($time, "=> fpga rxen_ctl=1");
-
-			#400;
-			fork 
-				soc_is_cfg_write(0, 4'b0001, 3);				//ioserdes txen
-				fpga_cfg_write(0,3,1,0);
-			join
-			$display($time, "=> soc txen_ctl=1");
-			$display($time, "=> fpga txen_ctl=1");
-
-			#200;
-			fpga_as_is_tdata = 32'h5a5a5a5a;
-			#40;
-			#200;
+			soc_cfg_write(32'h3000_5000, 4'b1111, 4'd0); // enable user project 0
 
 			test006_up_cfg_rw();
 		end
@@ -1195,37 +1027,6 @@ assign ioclk = io_clk;
 	// user DMA and user project configuration rw concurrent test
 	task test007;
 		begin
-			$display("test007: user DMA and user project configuration rw concurrent test");
-			fork 
-				soc_apply_reset(40, 40);			//change coreclk phase in soc
-				fpga_apply_reset(40,40);		//fix coreclk phase in fpga
-			join
-			
-			#40;
-			
-			fpga_as_to_is_init();	
-			
-			fpga_cc_is_enable=1;
-			fork 
-				soc_is_cfg_write(0, 4'b0001, 1);				//ioserdes rxen
-				fpga_cfg_write(0,1,1,0);
-			join
-			$display($time, "=> soc rxen_ctl=1");
-			$display($time, "=> fpga rxen_ctl=1");
-
-			#400;
-			fork 
-				soc_is_cfg_write(0, 4'b0001, 3);				//ioserdes txen
-				fpga_cfg_write(0,3,1,0);
-			join
-			$display($time, "=> soc txen_ctl=1");
-			$display($time, "=> fpga txen_ctl=1");
-
-			#200;
-			fpga_as_is_tdata = 32'h5a5a5a5a;
-			#40;
-			#200;
-
 			test007_up_concurrent_test();
 		end
 	endtask
@@ -1236,42 +1037,44 @@ assign ioclk = io_clk;
 
 	task test008;
 		begin
-			$display("test008: user project downstream test");
-			fork 
-				soc_apply_reset(40, 40);			//change coreclk phase in soc
-				fpga_apply_reset(40,40);		//fix coreclk phase in fpga
-			join
-			
-			#40;
-			
-			fpga_as_to_is_init();	
-			
-			fpga_cc_is_enable=1;
-			fork 
-				soc_is_cfg_write(0, 4'b0001, 1);				//ioserdes rxen
-				fpga_cfg_write(0,1,1,0);
-			join
-			$display($time, "=> soc rxen_ctl=1");
-			$display($time, "=> fpga rxen_ctl=1");
-
-			#400;
-			fork 
-				soc_is_cfg_write(0, 4'b0001, 3);				//ioserdes txen
-				fpga_cfg_write(0,3,1,0);
-			join
-			$display($time, "=> soc txen_ctl=1");
-			$display($time, "=> fpga txen_ctl=1");
-
-			#200;
-			fpga_as_is_tdata = 32'h5a5a5a5a;
-			#40;
-			#200;
+			soc_cfg_write(32'h3000_5000, 4'b1111, 4'd1); // enable user project 1
 
 			test008_up_downstream_test();
 		end
 	endtask
 
 	task test008_up_downstream_test;
+		@ (posedge fpga_coreclk);
+		fpga_as_is_tready <= 1;
+
+		soc_up_cfg_write(0, 4'b1111, 32'h0000_0001); // write ap start
+			
+		for(i = 0; i < 40; i = i + 1)begin		
+			fpga_axis_req(i, TID_DN_UP, 0);		//target to user project
+		end
+
+		$display($time, "=> test008_fpga_axis_req done");
+
+		repeat(150) @(posedge fpga_coreclk);
+
+		cfg_read_data_expect_value = 32'h0000_0004;
+		soc_up_cfg_read(0, 4'b1111); // read ap done
+
+		check_cnt = check_cnt + 1;
+		if (cfg_read_data_captured !== cfg_read_data_expect_value) begin
+			$display($time, "=> test008_up_soc_cfg [ERROR] cfg_read_data_expect_value=%x, cfg_read_data_captured=%x", cfg_read_data_expect_value, cfg_read_data_captured);
+			error_cnt = error_cnt + 1;
+			end	
+		else
+			$display($time, "=> test008_up_soc_cfg [PASS] cfg_read_data_expect_value=%x, cfg_read_data_captured=%x", cfg_read_data_expect_value, cfg_read_data_captured);
+		$display("-----------------");
+
+		$display("test008_up_downstream_test: UP downstream test - end");
+		$display("--------------------------------------------------------------------");
+
+		#100;
+			
+
 
 	endtask	
 
@@ -1320,7 +1123,7 @@ assign ioclk = io_clk;
 			
 		end
 	end
-//  ttttttt
+
 
 	initial begin		//get upstream soc_to_fpga_axilite_read_completion
 		while (1) begin
