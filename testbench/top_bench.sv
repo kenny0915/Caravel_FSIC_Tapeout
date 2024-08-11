@@ -26,12 +26,15 @@
 //`define USER_PROJECT_SIDEBAND_SUPPORT 1
 //`define USE_EDGEDETECT_IP 1
 
-//`define SYSTEM_test111 1
-//`define SYSTEM_test112 1
-//`define SYSTEM_test103 1
-//`define SYSTEM_test104 1
-//`define SYSTEM_test113 1
-//`define SYSTEM_test114 1
+//`define SYSTEM_test001 1
+//`define SYSTEM_test002 1
+//`define SYSTEM_test003 1
+//`define SYSTEM_test004 1
+//`define SYSTEM_test005 1
+//`define SYSTEM_test006 1
+//`define SYSTEM_test007 1
+//`define SYSTEM_test008 1
+
 
 module tb_fsic #( parameter BITS=32,
 		`ifdef USER_PROJECT_SIDEBAND_SUPPORT
@@ -446,25 +449,6 @@ assign ioclk = io_clk;
         $dumpvars(0,tb_fsic);
     end
     
-    
-    
-    // coef 
-    reg signed [31:0]coef[0:10];
-    initial begin
-        coef[0]  =  32'd0;      // 0x20
-        coef[1]  = -32'd10;     // 0x24
-        coef[2]  = -32'd9;      // 0x28
-        coef[3]  =  32'd23;     // 0x2C
-        coef[4]  =  32'd56;     // 0x30
-        coef[5]  =  32'd63;     // 0x34
-        coef[6]  =  32'd56;     // 0x38
-        coef[7]  =  32'd23;     // 0x3C
-        coef[8]  = -32'd9;      // 0x40
-        coef[9]  = -32'd10;     // 0x44
-        coef[10] =  32'd0;      // 0x48
-    end
-   integer j,k; 
-    
     initial begin
 	 	clock=0;
         soc_resetb = 0;
@@ -488,33 +472,38 @@ assign ioclk = io_clk;
 
         fsic_system_initial();// initial whole system            
                 
-        `ifdef SYSTEM_test103
+        `ifdef SYSTEM_test001
 		test001();
         `endif
 
-        `ifdef SYSTEM_test104
+        `ifdef SYSTEM_test002
 		test002();
         `endif
 
-        `ifdef SYSTEM_test111
+        `ifdef SYSTEM_test003
 		test003();
         `endif
 
-        `ifdef SYSTEM_test112
+        `ifdef SYSTEM_test004
 		test004();
         `endif
 
-        `ifdef SYSTEM_test113
+        `ifdef SYSTEM_test005
 		test005();
         `endif
 
-        `ifdef SYSTEM_test114
-		test008();
+        `ifdef SYSTEM_test006
+		test006();
 		`endif
 
-        //`ifdef
-        //test007();	//test007_mailbox_interrupt test
-        //`endif
+        `ifdef SYSTEM_test007
+        test007();
+        `endif
+
+        `ifdef SYSTEM_test008
+        test008();
+        `endif
+
 
 
 		#400;
@@ -1631,4 +1620,3 @@ assign ioclk = io_clk;
 	endtask
 
 endmodule
-

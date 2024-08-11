@@ -1,0 +1,21 @@
+#-----------------------------------------------------------
+# xsim v2022.1 (64-bit)
+# SW Build 3526262 on Mon Apr 18 15:47:01 MDT 2022
+# IP Build 3524634 on Mon Apr 18 20:55:01 MDT 2022
+# Start of session at: Sun Aug 11 16:28:52 2024
+# Process ID: 48560
+# Current directory: /home/ubuntu/Desktop/Caravel_FSIC_Tapeout/fifo_v1
+# Command line: xsim -mode tcl -source {xsim.dir/fifo_tb_elab/xsim_script.tcl}
+# Log file: /home/ubuntu/Desktop/Caravel_FSIC_Tapeout/fifo_v1/xsim.log
+# Journal file: /home/ubuntu/Desktop/Caravel_FSIC_Tapeout/fifo_v1/xsim.jou
+# Running On: ubuntu2004, OS: Linux, CPU Frequency: 3094.190 MHz, CPU Physical cores: 2, Host memory: 16766 MB
+#-----------------------------------------------------------
+source xsim.dir/fifo_tb_elab/xsim_script.tcl
+# xsim {fifo_tb_elab} -autoloadwcfg -runall
+Time resolution is 100 fs
+run -all
+INFO: [Common 17-41] Interrupt caught. Command should exit soon.
+run: Time (s): cpu = 00:00:01 ; elapsed = 00:00:07 . Memory (MB): peak = 2851.340 ; gain = 0.000 ; free physical = 9218 ; free virtual = 14276
+INFO: [Common 17-344] 'run' was cancelled
+exit
+INFO: [Common 17-206] Exiting xsim at Sun Aug 11 16:29:02 2024...

@@ -75,7 +75,7 @@ begin
 	o_rst_n = 1'b0;
 	#150 o_rst_n = 1;
 end
-reg [DATA_WIDTH-1:0] seed=73;
+reg [DATA_WIDTH-1:0] seed=1;
 
 task test0;   //wirte to full test full 
     if(start_test==1) begin
@@ -128,22 +128,20 @@ endtask
 
 always @(posedge o_clk) begin
 	begin
-        //test0;
+        test0;
         //test1;
         //test2;
-        test3;
+        //test3;
     end  
 end
 
 
 // read protocol
 always @(posedge o_clk) begin
-	begin
-		    if(r_rdy && r_vld) begin
-                r_data[i]<=data_out;
-                i<=i+1;           
-		    end
-    end  
+	if(r_rdy && r_vld) begin
+        r_data[i]<=data_out;
+        i<=i+1;           
+	end
 end
 
 // write protocol
@@ -165,8 +163,8 @@ begin
 
     #(Simulation_time)
     start_test = 2;
-    //#(Simulation_time)//test0
-    //start_test = 3;//test0
+    #(Simulation_time)
+    start_test = 3;
     wait (i==j);
     for (index = 0; index < i; index=index+1) begin
         $display("Write data at iteration %d: %d", index + 1, w_data[index]);

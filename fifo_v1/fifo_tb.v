@@ -138,12 +138,10 @@ end
 
 // read protocol
 always @(posedge o_clk) begin
-	begin
-		    if(r_rdy && r_vld) begin
-                r_data[i]<=data_out;
-                i<=i+1;           
-		    end
-    end  
+	if(r_rdy && r_vld) begin
+        r_data[i]<=data_out;
+        i<=i+1;           
+	end
 end
 
 // write protocol
