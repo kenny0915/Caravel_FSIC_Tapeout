@@ -1,0 +1,11 @@
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/ubuntu/Desktop/Caravel_FSIC_Tapeout/fifo_v1/ref/fifo.v" into library work
+INFO: [VRFC 10-311] analyzing module fifo
+INFO: [VRFC 10-311] analyzing module SRAM1RW64x128
+INFO: [VRFC 10-311] analyzing module SRAM1RW64x128_1bit
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/ubuntu/Desktop/Caravel_FSIC_Tapeout/fifo_v1/ref/SRAMRW64x128.v" into library work
+INFO: [VRFC 10-311] analyzing module SRAM1RW64x128
+WARNING: [VRFC 10-3609] overwriting previous definition of module 'SRAM1RW64x128' [/home/ubuntu/Desktop/Caravel_FSIC_Tapeout/fifo_v1/ref/SRAMRW64x128.v:18]
+INFO: [VRFC 10-311] analyzing module SRAM1RW64x128_1bit
+WARNING: [VRFC 10-3609] overwriting previous definition of module 'SRAM1RW64x128_1bit' [/home/ubuntu/Desktop/Caravel_FSIC_Tapeout/fifo_v1/ref/SRAMRW64x128.v:169]
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/ubuntu/Desktop/Caravel_FSIC_Tapeout/fifo_v1/ref/tb.v" into library work
+INFO: [VRFC 10-311] analyzing module fifo_tb

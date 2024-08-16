@@ -34,6 +34,9 @@
 //`define SYSTEM_test006 1
 //`define SYSTEM_test007 1
 //`define SYSTEM_test008 1
+//`define SYSTEM_test009 1
+//`define SYSTEM_test010 1
+
 
 
 module tb_fsic #( parameter BITS=32,
@@ -151,38 +154,24 @@ module tb_fsic #( parameter BITS=32,
 	reg [31:0] soc_to_fpga_axilite_read_cpl_captured;
 	event soc_to_fpga_axilite_read_cpl_event;
 
-    `ifdef USE_EDGEDETECT_IP	
-        reg [31:0] soc_to_fpga_axis_expect_count;
+	event aa_axis_event;
+	event la_axis_event;
+	event soc_to_fpga_axis_event;
+
+	reg [31:0] soc_to_fpga_axis_captured_count;
+	reg [31:0] soc_to_fpga_axis_expect_count;
+
 	`ifdef USER_PROJECT_SIDEBAND_SUPPORT
 		reg [(pUSER_PROJECT_SIDEBAND_WIDTH+4+4+1+32-1):0] soc_to_fpga_axis_expect_value[fpga_axis_test_length-1:0];
 	`else
 		reg [(4+4+1+32-1):0] soc_to_fpga_axis_expect_value[fpga_axis_test_length-1:0];
 	`endif
         
-        reg [31:0] soc_to_fpga_axis_captured_count;
 	`ifdef USER_PROJECT_SIDEBAND_SUPPORT
 		reg [(pUSER_PROJECT_SIDEBAND_WIDTH+4+4+1+32-1):0] soc_to_fpga_axis_captured[fpga_axis_test_length-1:0];
 	`else
 		reg [(4+4+1+32-1):0] soc_to_fpga_axis_captured[fpga_axis_test_length-1:0];
 	`endif
-    `else
-        reg [6:0] soc_to_fpga_axis_expect_count;
-	`ifdef USER_PROJECT_SIDEBAND_SUPPORT
-		reg [(pUSER_PROJECT_SIDEBAND_WIDTH+4+4+1+32-1):0] soc_to_fpga_axis_expect_value[127:0];
-	`else
-		reg [(4+4+1+32-1):0] soc_to_fpga_axis_expect_value[127:0];
-	`endif
-        
-        reg [6:0] soc_to_fpga_axis_captured_count;
-	`ifdef USER_PROJECT_SIDEBAND_SUPPORT
-		reg [(pUSER_PROJECT_SIDEBAND_WIDTH+4+4+1+32-1):0] soc_to_fpga_axis_captured[127:0];
-	`else
-		reg [(4+4+1+32-1):0] soc_to_fpga_axis_captured[127:0];
-	`endif
-
-    `endif
-	
-	event soc_to_fpga_axis_event;
 
 	reg [31:0] error_cnt;
 	reg [31:0] check_cnt;
@@ -504,7 +493,13 @@ assign ioclk = io_clk;
         test008();
         `endif
 
+		`ifdef SYSTEM_test009
+        test008();
+        `endif
 
+		`ifdef SYSTEM_test010
+        test010();
+        `endif
 
 		#400;
 		$display("=============================================================================================");
@@ -823,7 +818,7 @@ assign ioclk = io_clk;
 
 			$display($time, "=> test002_fpga_to_soc_cfg_test done");
 
-			#100;
+			#1000;
 
 		end
 	endtask
@@ -950,12 +945,14 @@ assign ioclk = io_clk;
 	// soc write and read mailbox and check correctness
 	task test005;
 		begin
+			$display("test005: mailbox test 2");
 
 			test005_mailbox_test_2();
 		end
 	endtask
 
 	task test005_mailbox_test_2;
+	begin
 		// fpga_axilite_write(FPGA_to_SOC_AA_BASE + AA_MailBox_Reg_Offset, 4'b1111, 32'h5a5a_5a5a);
 
 		soc_aa_cfg_write(AA_MailBox_Reg_Offset, 4'b1111, 32'h3a3a_3a3a);
@@ -983,12 +980,14 @@ assign ioclk = io_clk;
 		end	
 		else
 			$display($time, "=> test005_aa_internal_soc_cfg [PASS] cfg_read_data_expect_value=%x, cfg_read_data_captured=%x", cfg_read_data_expect_value, cfg_read_data_captured);
-				
+	end			
 	endtask
 
 	// user project loop back test
 	task test006;
 		begin
+			$display("test006: user project loop back test");
+
 			soc_cfg_write(32'h3000_5000, 4'b1111, 4'd0); // enable user project 0
 
 			test006_up_cfg_rw();
@@ -1016,6 +1015,8 @@ assign ioclk = io_clk;
 	// user DMA and user project configuration rw concurrent test
 	task test007;
 		begin
+			$display("test007: up concurrent test");
+
 			test007_up_concurrent_test();
 		end
 	endtask
@@ -1026,6 +1027,8 @@ assign ioclk = io_clk;
 
 	task test008;
 		begin
+			$display("test008: up downstream test 1");
+
 			soc_cfg_write(32'h3000_5000, 4'b1111, 4'd1); // enable user project 1
 
 			test008_up_downstream_test();
@@ -1033,6 +1036,7 @@ assign ioclk = io_clk;
 	endtask
 
 	task test008_up_downstream_test;
+	begin
 		@ (posedge fpga_coreclk);
 		fpga_as_is_tready <= 1;
 
@@ -1062,10 +1066,52 @@ assign ioclk = io_clk;
 		$display("--------------------------------------------------------------------");
 
 		#100;
-			
+	end
+	endtask
 
+	task test010;
+		begin
+			$display("test010: integrated upstream test");
 
-	endtask	
+			soc_cfg_write(32'h3000_5000, 4'b1111, 4'd3); // enable user project 3
+
+			test010_integrated_test_upstream();
+		end
+	endtask
+
+	task test010_integrated_test_upstream;
+		begin
+			soc_up_cfg_write(0, 4'b1111, 32'h0000_0001); // write ap start
+
+			for(i = 0; i < 16; i = i + 1)begin		
+				fpga_axis_req(i, TID_DN_AA, 0);		//target to user project
+			end
+
+			fork
+				@(soc_to_fpga_axis_event);
+				@(la_axis_event);
+				@(aa_axis_event);
+			join
+
+			cfg_read_data_expect_value = 32'h0000_0004;
+			soc_up_cfg_read(0, 4'b1111); // read ap done
+
+			check_cnt = check_cnt + 1;
+			if (cfg_read_data_captured !== cfg_read_data_expect_value) begin
+				$display($time, "=> test010_up_soc_cfg [ERROR] cfg_read_data_expect_value=%x, cfg_read_data_captured=%x", cfg_read_data_expect_value, cfg_read_data_captured);
+				error_cnt = error_cnt + 1;
+				end	
+			else
+				$display($time, "=> test010_up_soc_cfg [PASS] cfg_read_data_expect_value=%x, cfg_read_data_captured=%x", cfg_read_data_expect_value, cfg_read_data_captured);
+			$display("-----------------");
+
+			$display("test010_integrated_test_upstream - end");
+			$display("--------------------------------------------------------------------");
+
+			#100;
+
+		end
+	endtask
 
 	
 
@@ -1166,7 +1212,76 @@ assign ioclk = io_clk;
 		end
 	end
 
-	
+	localparam la_axis_test_length = 16;
+
+	reg [31:0] la_axis_cnt;
+	reg [31:0] la_axis_captured [la_axis_test_length - 1: 0];
+
+	initial begin		//get la stram data
+        la_axis_cnt = 0;
+		while (1) begin
+			@(posedge fpga_coreclk);
+			`ifdef USER_PROJECT_SIDEBAND_SUPPORT
+				if (fpga_is_as_tvalid == 1 && fpga_is_as_tid == TID_UP_LA && fpga_is_as_tuser == TUSER_AXIS) begin
+					la_axis_cnt = la_axis_cnt+1;
+					$display($time, "=> get soc_to_fpga_axis be : la_axis_cnt=%d,  la_axis_captured[%d] =%x, fpga_is_as_tupsb=%x, fpga_is_as_tstrb=%x, fpga_is_as_tkeep=%x , fpga_is_as_tlast=%x, fpga_is_as_tdata=%x", la_axis_cnt, la_axis_cnt, la_axis_captured[la_axis_cnt], fpga_is_as_tupsb, fpga_is_as_tstrb, fpga_is_as_tkeep , fpga_is_as_tlast, fpga_is_as_tdata);
+					la_axis_captured[la_axis_cnt] = {fpga_is_as_tupsb, fpga_is_as_tstrb, fpga_is_as_tkeep , fpga_is_as_tlast, fpga_is_as_tdata} ;		//use block assignment
+					$display($time, "=> get soc_to_fpga_axis af : la_axis_cnt=%d,  la_axis_captured[%d] =%x, fpga_is_as_tupsb=%x, fpga_is_as_tstrb=%x, fpga_is_as_tkeep=%x , fpga_is_as_tlast=%x, fpga_is_as_tdata=%x", la_axis_cnt, la_axis_cnt, la_axis_captured[la_axis_cnt], fpga_is_as_tupsb, fpga_is_as_tstrb, fpga_is_as_tkeep , fpga_is_as_tlast, fpga_is_as_tdata);
+				end	
+				if (la_axis_cnt == la_axis_test_length) begin
+					$display($time, "=> la_axis_captured : send soc_to_fpga_axiis_event");
+					#0 -> la_axis_event;
+				end
+			`else
+				if (fpga_is_as_tvalid == 1 && fpga_is_as_tid == TID_UP_LA && fpga_is_as_tuser == TUSER_AXIS) begin
+					la_axis_cnt = la_axis_cnt+1;
+					$display($time, "=> get soc_to_fpga_axis be : la_axis_cnt=%d,  la_axis_captured[%d] =%x, fpga_is_as_tstrb=%x, fpga_is_as_tkeep=%x , fpga_is_as_tlast=%x, fpga_is_as_tdata=%x", la_axis_cnt, la_axis_cnt, la_axis_captured[la_axis_cnt], fpga_is_as_tstrb, fpga_is_as_tkeep , fpga_is_as_tlast, fpga_is_as_tdata);
+					la_axis_captured[la_axis_cnt] = {fpga_is_as_tstrb, fpga_is_as_tkeep , fpga_is_as_tlast, fpga_is_as_tdata} ;		//use block assignment
+					$display($time, "=> get soc_to_fpga_axis af : la_axis_cnt=%d,  la_axis_captured[%d] =%x, fpga_is_as_tstrb=%x, fpga_is_as_tkeep=%x , fpga_is_as_tlast=%x, fpga_is_as_tdata=%x", la_axis_cnt, la_axis_cnt, la_axis_captured[la_axis_cnt], fpga_is_as_tstrb, fpga_is_as_tkeep , fpga_is_as_tlast, fpga_is_as_tdata);
+				end	
+				if (la_axis_cnt == la_axis_test_length) begin
+					$display($time, "=> la_axis_captured : send soc_to_fpga_axiis_event");
+					#0 -> la_axis_event;
+				end
+			`endif
+		end
+	end
+
+	localparam aa_axis_test_length = 16;
+
+
+	reg [31:0] aa_axis_cnt;
+	reg [31:0] aa_axis_captured [aa_axis_test_length - 1: 0];
+
+	initial begin		//get aa stram data
+        aa_axis_cnt = 0;
+		while (1) begin
+			@(posedge fpga_coreclk);
+			`ifdef
+				if (fpga_is_as_tvalid == 1 && fpga_is_as_tid == TID_UP_AA && fpga_is_as_tuser == TUSER_AXIS) begin
+					aa_axis_cnt = aa_axis_cnt+1;
+					$display($time, "=> get soc_to_fpga_axis be : aa_axis_cnt=%d,  aa_axis_captured[%d] =%x, fpga_is_as_tupsb=%x, fpga_is_as_tstrb=%x, fpga_is_as_tkeep=%x , fpga_is_as_tlast=%x, fpga_is_as_tdata=%x", aa_axis_cnt, aa_axis_cnt, aa_axis_captured[aa_axis_cnt], fpga_is_as_tupsb, fpga_is_as_tstrb, fpga_is_as_tkeep , fpga_is_as_tlast, fpga_is_as_tdata);
+					aa_axis_captured[aa_axis_cnt] = {fpga_is_as_tupsb, fpga_is_as_tstrb, fpga_is_as_tkeep , fpga_is_as_tlast, fpga_is_as_tdata} ;		//use block assignment
+					$display($time, "=> get soc_to_fpga_axis af : aa_axis_cnt=%d,  aa_axis_captured[%d] =%x, fpga_is_as_tupsb=%x, fpga_is_as_tstrb=%x, fpga_is_as_tkeep=%x , fpga_is_as_tlast=%x, fpga_is_as_tdata=%x", aa_axis_cnt, aa_axis_cnt, aa_axis_captured[aa_axis_cnt], fpga_is_as_tupsb, fpga_is_as_tstrb, fpga_is_as_tkeep , fpga_is_as_tlast, fpga_is_as_tdata);
+				end	
+				if (aa_axis_cnt == fpga_axis_test_length) begin
+					$display($time, "=> aa_axis_captured : send soc_to_fpga_axiis_event");
+					#0 -> aa_axis_event;
+				end
+			`else
+				if (fpga_is_as_tvalid == 1 && fpga_is_as_tid == TID_UP_AA && fpga_is_as_tuser == TUSER_AXIS) begin
+					aa_axis_cnt = aa_axis_cnt+1;
+					$display($time, "=> get soc_to_fpga_axis be : aa_axis_cnt=%d,  aa_axis_captured[%d] =%x, fpga_is_as_tstrb=%x, fpga_is_as_tkeep=%x , fpga_is_as_tlast=%x, fpga_is_as_tdata=%x", aa_axis_cnt, aa_axis_cnt, aa_axis_captured[aa_axis_cnt], fpga_is_as_tstrb, fpga_is_as_tkeep , fpga_is_as_tlast, fpga_is_as_tdata);
+					aa_axis_captured[aa_axis_cnt] = {fpga_is_as_tstrb, fpga_is_as_tkeep , fpga_is_as_tlast, fpga_is_as_tdata} ;		//use block assignment
+					$display($time, "=> get soc_to_fpga_axis af : aa_axis_cnt=%d,  aa_axis_captured[%d] =%x, fpga_is_as_tstrb=%x, fpga_is_as_tkeep=%x , fpga_is_as_tlast=%x, fpga_is_as_tdata=%x", aa_axis_cnt, aa_axis_cnt, aa_axis_captured[aa_axis_cnt], fpga_is_as_tstrb, fpga_is_as_tkeep , fpga_is_as_tlast, fpga_is_as_tdata);
+				end	
+				if (aa_axis_cnt == fpga_axis_test_length) begin
+					$display($time, "=> aa_axis_captured : send soc_to_fpga_axiis_event");
+					#0 -> aa_axis_event;
+				end
+			`endif
+		end
+	end
 
 	task fpga_axilite_write;
 		input [27:0] address;

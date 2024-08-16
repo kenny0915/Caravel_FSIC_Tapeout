@@ -1,0 +1,4 @@
+## file
+./my_fifo.v
+## SRAM
+./SRAMRW64x128.v

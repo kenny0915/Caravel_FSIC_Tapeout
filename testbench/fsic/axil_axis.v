@@ -1,3 +1,4 @@
+`timescale 1 ns / 1 ps
 // AXIL-AXIS (AA module) - AXILite-AXIS Protcol Conversion
 //  Specification: https://github.com/bol-edu/fsic_fpga/blob/main/fsic-spec-dev/modules/FSIC-AXIS%20interface%20specification.md
 // 

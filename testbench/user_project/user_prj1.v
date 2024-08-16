@@ -54,24 +54,91 @@ module USER_PRJ1 #( parameter pUSER_PROJECT_SIDEBAND_WIDTH   = 5,
 );
 
 
-assign awready       = 1'b0;
-assign arready       = 1'b0;
-assign wready        = 1'b0;
-assign rvalid        = 1'b0;
-assign rdata         = {pDATA_WIDTH{1'b0}};
-assign ss_tready     = 1'b0;
-assign sm_tvalid     = 1'b0;
-assign sm_tdata      = {pDATA_WIDTH{1'b0}};
+assign awready       = 1'b1;
+assign wready        = 1'b1;
+
+assign arready       = 1'b1;
+assign rvalid        = 1'b1;
+
+//assign ss_tready     = 1'b1;
+
+
+reg [31:0] ss_tdata_reg;
+reg ss_tvalid_reg;
+
+assign sm_tvalid     = 0;
+assign sm_tdata      = 0;
 assign sm_tid        = 3'b0;
 `ifdef USER_PROJECT_SIDEBAND_SUPPORT
   assign sm_tupsb      = 5'b0;
 `endif
-assign sm_tstrb      = 4'b0;
-assign sm_tkeep      = 1'b0;
-assign sm_tlast      = 1'b0;
+assign sm_tstrb      = ss_tstrb;
+assign sm_tkeep      = ss_tkeep;
+assign sm_tlast      = ss_tlast;
+
 assign low__pri_irq  = 1'b0;
 assign High_pri_req  = 1'b0;
 assign la_data_o     = 24'b0;
+
+reg [7:0] cfg_reg;
+reg [7:0] next_cfg_reg;
+
+reg [4:0] cnt;
+wire [4:0] cnt_next;
+
+assign cnt_next = (cnt == 5'd25) ? cnt : cnt + 1'b1;
+
+always @(posedge axis_clk or negedge axis_rst_n) begin
+    if (~axis_rst_n || cfg_reg[0])
+        cnt <= 1'b0;
+    else
+        cnt <= cnt_next;
+end
+
+assign ss_tready = (cnt == 5'd25);
+
+always @(posedge axis_clk or negedge axis_rst_n) begin
+    if (~axis_rst_n)
+        ss_tdata_reg <= 32'h0000_0000;
+    else
+        ss_tdata_reg <= ss_tdata;
+end
+
+always @(posedge axis_clk or negedge axis_rst_n) begin
+    if (~axis_rst_n)
+        ss_tvalid_reg <= 1'b0;
+    else
+        ss_tvalid_reg <= ss_tvalid;
+end
+
+wire done;
+
+assign done = (ss_tdata == 32'd39);
+
+always @* begin
+    case(cfg_reg)
+        8'd0:
+            if(awaddr==12'h00 && awvalid && wvalid) next_cfg_reg = wdata[7:0];
+            else next_cfg_reg = cfg_reg;
+        8'd1:
+            next_cfg_reg = 8'd2;
+        8'd2:
+            if(done) next_cfg_reg = 8'd4;
+            else next_cfg_reg = cfg_reg;
+        8'd4:
+            next_cfg_reg = cfg_reg;
+        default: next_cfg_reg = 8'd0;
+    endcase
+end
+
+always@(posedge axi_clk or negedge axi_reset_n) begin
+    if (~axi_reset_n)
+        cfg_reg <= 8'h00;
+    else
+        cfg_reg <= next_cfg_reg;        
+end
+
+assign rdata = (arvalid && rready && (araddr==12'h00)) ? (cfg_reg) : ({pDATA_WIDTH{1'b0}});
 
 
 endmodule // USER_PRJ1

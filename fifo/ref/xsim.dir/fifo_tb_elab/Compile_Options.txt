@@ -1,0 +1,1 @@
+-top "fifo_tb" -debug "all" -snapshot "fifo_tb_elab" 

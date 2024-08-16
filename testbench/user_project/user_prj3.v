@@ -60,18 +60,66 @@ assign wready        = 1'b0;
 assign rvalid        = 1'b0;
 assign rdata         = {pDATA_WIDTH{1'b0}};
 assign ss_tready     = 1'b0;
-assign sm_tvalid     = 1'b0;
-assign sm_tdata      = {pDATA_WIDTH{1'b0}};
+
 assign sm_tid        = 3'b0;
 `ifdef USER_PROJECT_SIDEBAND_SUPPORT
   assign sm_tupsb      = 5'b0;
 `endif
-assign sm_tstrb      = 4'b0;
-assign sm_tkeep      = 1'b0;
+assign sm_tstrb      = 4'b1111;
+assign sm_tkeep      = 1'b1;
 assign sm_tlast      = 1'b0;
 assign low__pri_irq  = 1'b0;
 assign High_pri_req  = 1'b0;
-assign la_data_o     = 24'b0;
+
+reg [3:0] la_data_cnt      , up_data_cnt;
+wire [3:0] la_data_cnt_next, up_data_cnt_next;
+
+reg [2:0] cfg_reg, next_cfg_reg;
+
+assign sm_tvalid     = (cfg_reg == 3'b010 || cfg_reg == 3'b001);
+
+assign la_data_o     = la_data_cnt;
+assign sm_tdata      = up_data_cnt;
+
+assign la_data_cnt_next = la_data_cnt == 15 ? la_data_cnt : la_data_cnt + 1;
+assign up_data_cnt_next = up_data_cnt == 15 ? up_data_cnt : up_data_cnt + 1;
+
+always @(posedge axis_clk or negedge axis_rst_n) begin
+  if(~axis_rst_n || cfg_reg[0]) begin
+    la_data_cnt <= 0;
+    up_data_cnt <= 0;
+  end else begin
+    la_data_cnt <= la_data_cnt_next;
+    up_data_cnt <= up_data_cnt_next;
+  end  
+end
+
+assign done = (la_data_o == 15 && sm_tdata == 15);
+
+//----------//
+
+always @* begin
+    case(cfg_reg)
+        3'b000:
+            if(awaddr==12'h00 && awvalid && wvalid) next_cfg_reg = wdata[2:0];
+            else next_cfg_reg = cfg_reg;
+        3'b001:
+            next_cfg_reg = 3'b010;
+        3'b010:
+            if(done) next_cfg_reg = 3'b100;
+            else next_cfg_reg = cfg_reg;
+        3'b100:
+            next_cfg_reg = cfg_reg;
+        default: next_cfg_reg = 3'b000;
+    endcase
+end
+
+always@(posedge axi_clk or negedge axi_reset_n) begin
+    if (~axi_reset_n)
+        cfg_reg <= 3'b000;
+    else
+        cfg_reg <= next_cfg_reg;        
+end
 
 
 endmodule // USER_PRJ3
