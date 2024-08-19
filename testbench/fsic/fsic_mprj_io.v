@@ -4,10 +4,16 @@
 
 
 
-module MPRJ_IO #(   parameter pUSER_PROJECT_SIDEBAND_WIDTH   = 5,
-          parameter pSERIALIO_WIDTH   = 13,
-          parameter pADDR_WIDTH   = 12,
-          parameter pDATA_WIDTH   = 32
+module MPRJ_IO #(      
+    `ifdef USER_PROJECT_SIDEBAND_SUPPORT
+		  parameter pUSER_PROJECT_SIDEBAND_WIDTH   = 5,
+			parameter pSERIALIO_WIDTH   = 13,
+		`else
+			parameter pUSER_PROJECT_SIDEBAND_WIDTH   = 0,
+			parameter pSERIALIO_WIDTH   = 12,
+		`endif
+      parameter pADDR_WIDTH   = 12,
+      parameter pDATA_WIDTH   = 32
                 )
 (
   output wire  [pSERIALIO_WIDTH-1: 0] serial_rxd,
@@ -86,8 +92,11 @@ assign io_oeb[IOCLK_OFFSET]   =  1'b1;    // IO_CLK (from FPGA)
 
 //assign value to avoid dc_shell report warning
 //below setting only for pSERIALIO_WIDTH=13, for pSERIALIO_WIDTH=12 need change the hard code setting.
-assign io_oeb[ 37]   =  1'b0; 		//for pSERIALIO_WIDTH=13
-//assign io_oeb[ 37:35]   =  3'b0; 		//for pSERIALIO_WIDTH=12
+`ifdef USER_PROJECT_SIDEBAND_SUPPORT
+  assign io_oeb[ 37]   =  1'b0; 		//for pSERIALIO_WIDTH=13
+`else
+  assign io_oeb[ 37:35]   =  3'b0; 		//for pSERIALIO_WIDTH=12
+`endif
 
 assign serial_rxd  = io_in[RXD_OFFSET +: pSERIALIO_WIDTH];
 assign serial_rclk = io_in[RXCLK_OFFSET];
@@ -96,11 +105,13 @@ assign io_out[TXD_OFFSET +: pSERIALIO_WIDTH] = serial_txd;
 assign io_out[TXCLK_OFFSET] = serial_tclk;
 
 //assign value to avoid dc_shell report warning
-assign io_out[21:0] = 32'b0; 			//for pSERIALIO_WIDTH=13
-assign io_out[37:36] = 2'b0; 			//for pSERIALIO_WIDTH=13
-//assign io_out[20:0] = 32'b0; 		//for pSERIALIO_WIDTH=12
-//assign io_out[37:34] = 4'b0; 		//for pSERIALIO_WIDTH=12
-
+`ifdef USER_PROJECT_SIDEBAND_SUPPORT
+  assign io_out[21:0] = 32'b0; 			//for pSERIALIO_WIDTH=13
+  assign io_out[37:36] = 2'b0; 			//for pSERIALIO_WIDTH=13
+`else
+  assign io_out[20:0] = 32'b0; 		//for pSERIALIO_WIDTH=12
+  assign io_out[37:34] = 4'b0; 		//for pSERIALIO_WIDTH=12
+`endif
 endmodule // MPRJ_IO
 
 

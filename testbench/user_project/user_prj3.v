@@ -67,12 +67,11 @@ assign sm_tid        = 3'b0;
 `endif
 assign sm_tstrb      = 4'b1111;
 assign sm_tkeep      = 1'b1;
-assign sm_tlast      = 1'b0;
 assign low__pri_irq  = 1'b0;
 assign High_pri_req  = 1'b0;
 
-reg [3:0] la_data_cnt      , up_data_cnt;
-wire [3:0] la_data_cnt_next, up_data_cnt_next;
+reg [4:0] la_data_cnt      , up_data_cnt;
+wire [4:0] la_data_cnt_next, up_data_cnt_next;
 
 reg [2:0] cfg_reg, next_cfg_reg;
 
@@ -93,6 +92,8 @@ always @(posedge axis_clk or negedge axis_rst_n) begin
     up_data_cnt <= up_data_cnt_next;
   end  
 end
+
+assign sm_tlast = (up_data_cnt == 15) && (cfg_reg == 3'b010);
 
 assign done = (la_data_o == 15 && sm_tdata == 15);
 

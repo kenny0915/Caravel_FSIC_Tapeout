@@ -13,6 +13,7 @@
 ./fsic/irq_mux.v
 ./fsic/la_mux.v
 ./fsic/LogicAnalyzer.v
+./fsic/Sram.v
 ./fsic/sw_caravel.v
 ## user project
 ./user_project/user_subsys.v

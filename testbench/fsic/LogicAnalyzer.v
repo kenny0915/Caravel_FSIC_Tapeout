@@ -18,7 +18,7 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
-
+`define USE_skywater_SRAM 1
 
 module LOGIC_ANLZ #( parameter pADDR_WIDTH   = 15,
                      parameter pDATA_WIDTH   = 32

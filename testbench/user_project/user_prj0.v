@@ -64,6 +64,7 @@ assign ss_tready     = 1'b1;
 
 
 reg [31:0] ss_tdata_reg;
+reg ss_tlast_reg;
 reg ss_tvalid_reg;
 
 assign sm_tvalid     = ss_tvalid_reg || ss_tvalid;
@@ -74,7 +75,7 @@ assign sm_tid        = 3'b0;
 `endif
 assign sm_tstrb      = ss_tstrb;
 assign sm_tkeep      = ss_tkeep;
-assign sm_tlast      = ss_tlast;
+assign sm_tlast      = ss_tlast_reg;
 
 assign low__pri_irq  = 1'b0;
 assign High_pri_req  = 1'b0;
@@ -86,10 +87,13 @@ reg [7:0] next_cfg_reg;
 
 
 always @(posedge axis_clk or negedge axis_rst_n) begin
-    if (~axis_rst_n)
+    if (~axis_rst_n) begin
         ss_tdata_reg <= 32'h0000_0000;
-    else
+        ss_tlast_reg <= 0;
+    end else begin
         ss_tdata_reg <= ss_tdata;
+        ss_tlast_reg <= ss_tlast;
+    end
 end
 
 always @(posedge axis_clk or negedge axis_rst_n) begin
